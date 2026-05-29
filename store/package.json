@@ -1,0 +1,14 @@
+{
+  "name": "store",
+  "version": "1.0.0",
+  "description": "Marketing asset renderer for Multi-Prompt for ChatGPT.",
+  "main": "render.js",
+  "private": true,
+  "type": "commonjs",
+  "scripts": {
+    "render": "node render.js"
+  },
+  "dependencies": {
+    "playwright-core": "^1.49.1"
+  }
+}

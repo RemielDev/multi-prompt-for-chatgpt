@@ -1,0 +1,16 @@
+{
+  "name": "multi-prompt-for-chatgpt",
+  "version": "2.0.0",
+  "description": "Send one prompt to several new ChatGPT chats at once, each with its own angle, and compare the answers side by side.",
+  "author": "RemielDev",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/RemielDev/multi-prompt-for-chatgpt.git"
+  },
+  "private": true,
+  "scripts": {
+    "render": "cd store && node render.js",
+    "pack": "node scripts/pack.js"
+  }
+}

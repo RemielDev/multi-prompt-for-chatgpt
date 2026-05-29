@@ -1,155 +1,117 @@
 # Multi-Prompt for ChatGPT
 
+[![License: MIT](https://img.shields.io/badge/License-MIT-10a37f.svg)](LICENSE)
+[![Manifest V3](https://img.shields.io/badge/Manifest-V3-19c37d.svg)](manifest.json)
+![No dependencies](https://img.shields.io/badge/runtime%20deps-none-2ea44f.svg)
+[![Website](https://img.shields.io/badge/site-multi--prompt-1d1d25.svg)](https://remieldev.github.io/multi-prompt-for-chatgpt/)
+
+A Chrome extension that sends **one prompt to several new ChatGPT chats at once** —
+each optionally with **its own angle** — so you can compare the answers side by
+side. It works from a button **inside ChatGPT itself**, and re-attaches your
+images to every new chat.
+
+![hero](store/out/screenshot-1-hero.png)
+
 > Independent project — not affiliated with, endorsed by, or sponsored by OpenAI.
 
-A Chrome extension (Manifest V3) that fans **one** prompt out to **several new
-ChatGPT chats at once** — each in its own tab, optionally with its own angle —
-so you can compare different answers side by side.
+## Features
 
-It adds two buttons inside ChatGPT itself:
+- **Fan out from the composer.** A grid button next to ChatGPT's Send button
+  opens whatever you're typing (plus attached images) in N new chats.
+- **Re-run any past prompt.** A button in each previous message's hover toolbar
+  re-sends that prompt (and its images) to N fresh chats.
+- **One prompt, many angles.** Pick a style: *identical*, a *"give a different
+  approach"* nudge, or *distinct angles* per chat (concise, detailed, critical,
+  creative, step-by-step — or your own editable list).
+- **Media-safe.** Re-attaches images to every chat and refuses to submit a chat
+  that's missing media, so comparisons are fair.
+- **Tidy workspace.** 1–10 chats per click, auto-grouped into one labelled tab
+  group, with a one-click **Close all variation tabs** and keyboard shortcuts.
+- **Private.** No account, no tracking, no remote code, no servers. Prompts never
+  touch disk and only ever go to ChatGPT itself.
 
-1. **Composer button** — a grid icon next to ChatGPT's Send button. Sends what
-   you're currently typing (plus any attached files) to N new chats.
-2. **Per-message button** — a grid icon docked into the hover toolbar of every
-   past user message, next to Copy/Edit. Re-sends that prompt (and its images)
-   to N new chats.
+## Install (unpacked, for development)
 
-All behaviour is configured once in the toolbar popup; the in-page buttons just
-read those settings.
+1. Open `chrome://extensions`
+2. Toggle **Developer mode** (top right)
+3. **Load unpacked** and select this folder
+4. Pin the extension and open `https://chatgpt.com`
+
+> After editing code, click the reload icon on the extension card.
+
+## Use
+
+1. Click the toolbar icon to set your **count** and **variation style** once.
+2. In ChatGPT, type a prompt (attach images if you like) and click the **grid
+   button** next to Send — or hover any past message and click its grid button.
+3. The new chats open, each fills itself in, and submits automatically.
+
+Keyboard shortcuts: `Ctrl/Cmd+Shift+1` opens settings · `Ctrl/Cmd+Shift+0`
+closes all variation tabs.
 
 ## How it works
 
-> **Verified live:** today's ChatGPT only *pre-fills* the composer from the
-> `?prompt=` URL parameter — it no longer auto-submits, and `&model=` is
-> ignored. So every opened tab must click **Send** itself.
+ChatGPT's `?prompt=` URL parameter only **pre-fills** the composer; it no longer
+auto-submits. So each opened tab must submit itself:
 
-The flow:
+- `background.js` expands your prompt into one string per tab (applying the angle
+  strategy), opens N tabs pre-filled via `?prompt=`, and stores each tab's
+  payload **keyed by that tab's real id** — nothing is smuggled through the URL,
+  and media is stored **once** for the whole fan-out.
+- `content.js` (in each new tab) asks the worker for its payload, re-attaches any
+  media and waits for the upload chips to confirm, reconciles the prompt text,
+  waits for uploads to finish, then clicks **Send** (with an Enter-key fallback).
 
-1. **Source tab** (where you click) gathers the prompt + any attached media,
-   then asks the background service worker to open N tabs.
-2. **Background worker** expands the prompt into one string per tab (applying
-   your chosen angle strategy), opens each tab at `https://chatgpt.com/?prompt=…`
-   (native instant pre-fill), and stores each tab's payload **keyed by that
-   tab's real id**. Media is stored **once** for the whole fan-out, not copied
-   per tab.
-3. **Each new tab** asks the worker "what's my payload?" (answered via the
-   tab's own id — nothing is smuggled through the URL). It then:
-   - attaches the media and waits for the upload chips to confirm,
-   - reconciles the prompt text (only retypes if the pre-fill doesn't match),
-   - waits for uploads to finish (Send stays disabled until they do),
-   - clicks **Send**, with an Enter-key fallback if the click doesn't take.
+No API keys. No server. The extension rides your existing ChatGPT login, so every
+chat counts against your own ChatGPT plan.
 
-Keying payloads by tab id (instead of a URL hash) is deliberate: ChatGPT
-rewrites the page URL on load — it strips unknown query params and can drop the
-hash — so the URL is not a reliable carrier.
-
-## File structure
+## Project layout
 
 ```
-chatgpt-multi-prompt/
-├── manifest.json     # MV3 manifest, icons, commands, permissions
-├── background.js     # Service worker: expand prompt, open/group/close tabs, relay payloads
-├── content.js        # Inject buttons (source) + auto-fill/attach/send (receiver)
-├── content.css       # In-page button + toast styling (light/dark, reduced-motion)
-├── popup.html        # Settings UI
-├── popup.css         # Popup styling
-├── popup.js          # Persist settings, "close all" action
-├── icons/            # icon16/32/48/128.png
-└── README.md
+manifest.json            MV3 manifest (permissions, action, commands)
+background.js            service worker: opens/groups/closes tabs, relays payloads
+content.js               injects buttons + auto-fills/attaches/submits new chats
+content.css              in-page button + toast styling
+popup.html/.css/.js      the settings UI
+icons/                   16/32/48/128 PNG icons
+store/
+  assets.html            source template for all marketing graphics
+  render.js              renders screenshots, promo tiles, and icons via your Chrome
+  out/                   generated store assets
+  STORE_LISTING.md       copy/paste-ready Chrome Web Store listing
+  PRIVACY.md             privacy policy
+scripts/pack.js          builds dist/multi-prompt-for-chatgpt.zip
+index.html               GitHub Pages landing page
+privacy.html             hosted privacy policy
 ```
 
-## Permissions
+## Building store assets
 
-| Permission                      | Why                                                            |
-| ------------------------------- | -------------------------------------------------------------- |
-| `storage`                       | Save settings (sync) + briefly hold each tab's payload (session). |
-| `tabGroups`                     | Collect the new tabs into a "ChatGPT Variations" group.        |
-| `host_permissions: chatgpt.com` | Inject the content script that adds the buttons and automates Send. |
+```bash
+cd store
+npm install            # installs playwright-core (uses your system Chrome)
+npm run render         # regenerates everything in store/out/ and icons/
+```
 
-No `tabs`, no `scripting`, no `clipboard`, no analytics, no remote servers.
+`render.js` launches your installed Chrome via `playwright-core`, with no browser
+download. Override the path with `CHROME_PATH=... node render.js` if needed.
 
-## Install (load unpacked)
+## Packaging for the Web Store
 
-1. Open `chrome://extensions/`.
-2. Turn on **Developer mode** (top-right).
-3. Click **Load unpacked** and select this folder
-   (`C:\Users\remie\Development\chatgpt-multi-prompt`).
-4. Pin the extension. Make sure you're signed in to ChatGPT.
-5. Open `https://chatgpt.com/` — the grid buttons appear in the composer and on
-   each past message's hover toolbar.
+```bash
+npm run pack           # from repo root, builds dist/multi-prompt-for-chatgpt.zip
+```
 
-> **Updating:** after editing any file, return to `chrome://extensions/` and
-> click the **reload** (↻) icon on the extension's card.
+Then upload that zip in the
+[Developer Dashboard](https://chrome.google.com/webstore/devconsole) and fill in
+the fields from `store/STORE_LISTING.md`.
 
-## Settings (popup)
+## Notes and disclaimers
 
-- **Variations per click** — 1 to 10.
-- **Variation style:**
-  - **Identical** — same prompt to every chat.
-  - **Nudge for variety** — appends a "give a different approach" line.
-  - **Distinct angles** — each chat gets its own angle from your editable list
-    (one per line; cycles if there are more tabs than angles). Defaults cover
-    concise / detailed / creative / critical / step-by-step.
-- **Group the new tabs together** — into a labelled tab group.
-- **Jump to the first new tab** — focus it after opening (off by default, so
-  you can keep working in the source tab).
-- **Close all variation tabs** — one click closes every tab opened by recent
-  fan-outs.
-
-### Keyboard shortcuts
-
-- `Ctrl/Cmd + Shift + 1` — open the settings popup.
-- `Ctrl/Cmd + Shift + 0` — close all variation tabs.
-
-## Privacy
-
-- Prompts and files live only in the active browser session
-  (`chrome.storage.session`, RAM-backed, wiped on Chrome close) and are cleared
-  as soon as each tab claims them (5-minute TTL as a backstop).
-- Settings live in `chrome.storage.sync`. No prompt content is ever stored
-  there.
-- Nothing is sent anywhere except ChatGPT itself. No analytics, no telemetry.
-
-## Reliability & media guarantees
-
-The contract: **if media was visibly attached to the prompt, every fanned-out
-tab either contains all of it, or doesn't submit at all.** No silent
-half-sends.
-
-- **Source side** refuses to fan out if the visible attachment chip count
-  doesn't match the files it could read, or if an upload is still in progress.
-- **Past messages** force lazy-loaded images to load before capture; if any
-  image can't be captured, the whole fan-out aborts with a clear message.
-  Non-image attachments (PDF/DOCX) can't be recovered from the DOM, so the
-  fan-out aborts rather than sending a text-only version.
-- **Receiver side** waits for the upload chips to appear (retrying via
-  drag-drop if the file-input path didn't register), waits for uploads to
-  finish, and only then submits — otherwise it refuses and tells you.
-- Buttons show a busy spinner and ignore double-clicks while a fan-out runs.
-
-## Limitations
-
-- **Model is not preserved.** ChatGPT ignores the `&model=` URL param, so new
-  chats open in your account's default model. (Documented honestly — the
-  previous URL approach never actually worked.)
-- **Media uses DOM automation.** The text path and the media path both now
-  rely on driving ChatGPT's composer, because auto-submit is gone. If ChatGPT
-  changes its composer markup substantially, the fallbacks may need updating.
-- **Image-only re-attach for past messages.** Document attachments are not
-  re-uploadable (their bytes aren't in the rendered DOM).
-- **~7 MB total media per fan-out**, to stay within session-storage limits.
-  Larger sets are rejected up front with a clear message.
-- **Up to 10 tabs** per click, hard-capped.
-- **Independent chats.** The variations can't see each other; angles/nudges are
-  requests for variety, not guarantees.
-
-## Ideas for later
-
-- Best-effort model selection by driving the model dropdown in each new tab.
-- A side-by-side compare view that tiles the variation tabs.
-- Per-click count override (e.g. hold Shift to double it).
-- Saved prompt presets.
-- Re-uploading document attachments via ChatGPT's file API rather than the DOM.
+- Not affiliated with OpenAI. "ChatGPT" is a trademark of OpenAI, used here only
+  to describe compatibility.
+- The flow depends on ChatGPT's page; if the composer markup changes
+  substantially, update the selectors in `content.js`.
 
 ## License
 

@@ -1,0 +1,143 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Multi-Prompt for ChatGPT — one prompt, every angle</title>
+<meta name="description" content="A Chrome extension that sends one prompt to several new ChatGPT chats at once, each with its own angle, so you can compare the answers side by side." />
+<meta property="og:title" content="Multi-Prompt for ChatGPT" />
+<meta property="og:description" content="One prompt, sent to several ChatGPT chats at once. Compare the answers side by side." />
+<meta property="og:image" content="store/out/promo-marquee-1400x560.png" />
+<meta property="og:type" content="website" />
+<link rel="icon" type="image/png" href="icons/icon128.png" />
+<style>
+  :root{
+    --bg:#0a0f0e; --panel:#121a18; --elev:#0e1513; --border:#243029; --soft:#1a221f;
+    --text:#f2f5f4; --muted:#9bb0a8; --dim:#6b817a;
+    --a:#10a37f; --b:#2dd4bf; --grad:linear-gradient(135deg,var(--a),var(--b));
+  }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  html{scroll-behavior:smooth;}
+  body{background:var(--bg);color:var(--text);
+    font-family:"Inter",-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,Arial,sans-serif;-webkit-font-smoothing:antialiased;line-height:1.5;}
+  a{color:inherit;text-decoration:none;}
+  .wrap{max-width:1080px;margin:0 auto;padding:0 24px;}
+  .grad-t{background:var(--grad);-webkit-background-clip:text;background-clip:text;color:transparent;}
+
+  /* nav */
+  nav{position:sticky;top:0;z-index:10;backdrop-filter:blur(12px);background:rgba(10,15,14,.7);border-bottom:1px solid var(--soft);}
+  nav .wrap{display:flex;align-items:center;justify-content:space-between;height:62px;}
+  .brand{display:flex;align-items:center;gap:10px;font-weight:800;letter-spacing:-.01em;}
+  .brand img{width:28px;height:28px;border-radius:8px;}
+  .navlinks{display:flex;align-items:center;gap:22px;font-size:14px;color:var(--muted);}
+  .navlinks a:hover{color:var(--text);}
+  .btn{display:inline-flex;align-items:center;gap:8px;font-weight:700;font-size:14px;color:#062019;
+    background:var(--grad);padding:10px 16px;border-radius:10px;border:0;cursor:pointer;transition:transform .08s ease,filter .15s ease;}
+  .btn:hover{filter:brightness(1.06);} .btn:active{transform:scale(.98);}
+  .btn.ghost{background:transparent;color:var(--text);border:1px solid var(--border);}
+
+  /* hero */
+  header.hero{position:relative;overflow:hidden;padding:84px 0 40px;}
+  header.hero::before{content:"";position:absolute;inset:0;z-index:-1;
+    background:radial-gradient(800px 460px at 20% 0%,rgba(16,163,127,.22),transparent 60%),radial-gradient(700px 500px at 95% 30%,rgba(45,212,191,.14),transparent 60%);}
+  .kicker{display:inline-flex;align-items:center;gap:8px;font-size:12px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;
+    color:#9ff0d6;background:rgba(16,163,127,.12);border:1px solid rgba(16,163,127,.3);padding:6px 12px;border-radius:999px;}
+  h1{font-size:clamp(38px,6vw,64px);font-weight:800;letter-spacing:-.02em;line-height:1.04;margin:18px 0 16px;}
+  .sub{font-size:clamp(16px,2.4vw,20px);color:var(--muted);max-width:620px;}
+  .cta-row{display:flex;flex-wrap:wrap;gap:12px;margin-top:26px;}
+  .heroimg{margin-top:46px;border-radius:16px;border:1px solid var(--border);overflow:hidden;box-shadow:0 40px 100px rgba(0,0,0,.5);}
+  .heroimg img{display:block;width:100%;}
+
+  /* sections */
+  section{padding:60px 0;}
+  h2{font-size:clamp(26px,4vw,38px);font-weight:800;letter-spacing:-.02em;text-align:center;}
+  .sec-sub{text-align:center;color:var(--muted);margin:10px auto 0;max-width:560px;}
+  .grid{display:grid;grid-template-columns:repeat(3,1fr);gap:18px;margin-top:40px;}
+  .card{background:var(--panel);border:1px solid var(--border);border-radius:16px;padding:22px;}
+  .card .ic{width:38px;height:38px;border-radius:10px;background:var(--grad);display:grid;place-items:center;margin-bottom:14px;color:#062019;font-weight:900;}
+  .card h3{font-size:16px;margin-bottom:7px;}
+  .card p{font-size:14px;color:var(--muted);}
+
+  .shots{display:grid;grid-template-columns:repeat(2,1fr);gap:18px;margin-top:40px;}
+  .shots img{width:100%;border-radius:14px;border:1px solid var(--border);}
+
+  .steps{counter-reset:s;max-width:680px;margin:36px auto 0;display:flex;flex-direction:column;gap:14px;}
+  .step{display:flex;gap:14px;align-items:flex-start;background:var(--panel);border:1px solid var(--border);border-radius:12px;padding:16px 18px;}
+  .step::before{counter-increment:s;content:counter(s);flex:none;width:28px;height:28px;border-radius:50%;background:var(--grad);color:#062019;font-weight:800;display:grid;place-items:center;}
+  .step code{background:var(--elev);border:1px solid var(--border);border-radius:6px;padding:1px 6px;font-size:13px;}
+
+  footer{border-top:1px solid var(--soft);padding:36px 0;color:var(--muted);font-size:13px;}
+  footer .wrap{display:flex;flex-wrap:wrap;gap:14px;align-items:center;justify-content:space-between;}
+  footer a{color:var(--muted);} footer a:hover{color:var(--text);}
+  .disclaim{margin-top:10px;font-size:12px;color:var(--dim);}
+
+  @media(max-width:760px){.grid{grid-template-columns:1fr;}.shots{grid-template-columns:1fr;}.navlinks a:not(.btn){display:none;}}
+</style>
+</head>
+<body>
+
+<nav><div class="wrap">
+  <a class="brand" href="#top"><img src="icons/icon128.png" alt="" />Multi-Prompt</a>
+  <div class="navlinks">
+    <a href="#features">Features</a>
+    <a href="#install">Install</a>
+    <a href="https://github.com/RemielDev/multi-prompt-for-chatgpt">GitHub</a>
+    <a class="btn" href="https://github.com/RemielDev/multi-prompt-for-chatgpt">Get it</a>
+  </div>
+</div></nav>
+
+<header class="hero" id="top"><div class="wrap">
+  <span class="kicker">Chrome Extension · Manifest V3</span>
+  <h1>One prompt.<br><span class="grad-t">Every angle.</span></h1>
+  <p class="sub">Send the same prompt to several new ChatGPT chats at once — each optionally with its own angle — and compare the answers side by side. Right inside ChatGPT, images and all.</p>
+  <div class="cta-row">
+    <a class="btn" href="https://github.com/RemielDev/multi-prompt-for-chatgpt">View on GitHub</a>
+    <a class="btn ghost" href="#install">How to install</a>
+  </div>
+  <div class="heroimg"><img src="store/out/screenshot-1-hero.png" alt="Multi-Prompt for ChatGPT" /></div>
+</div></header>
+
+<section id="features"><div class="wrap">
+  <h2>Built for comparing answers</h2>
+  <p class="sec-sub">Stop asking the same question five times by hand. Fan it out and read the differences.</p>
+  <div class="grid">
+    <div class="card"><div class="ic">⊞</div><h3>Fan out in one click</h3><p>A grid button next to ChatGPT's Send opens your prompt in up to 10 new chats at once.</p></div>
+    <div class="card"><div class="ic">∠</div><h3>Distinct angles</h3><p>Give each chat its own angle — concise, detailed, critical, creative — or your own editable list.</p></div>
+    <div class="card"><div class="ic">↻</div><h3>Re-run past prompts</h3><p>Every previous message gets a button to re-send it — with its images — to fresh chats.</p></div>
+    <div class="card"><div class="ic">🖼</div><h3>Media-safe</h3><p>Re-attaches your images to every chat and refuses to submit one that's missing media.</p></div>
+    <div class="card"><div class="ic">⊟</div><h3>Tidy tabs</h3><p>Auto-groups the new chats and closes them all with one click or a keyboard shortcut.</p></div>
+    <div class="card"><div class="ic">🔒</div><h3>Private</h3><p>No account, no tracking, no servers. Prompts never touch disk and only ever go to ChatGPT.</p></div>
+  </div>
+</div></section>
+
+<section style="padding-top:0"><div class="wrap">
+  <div class="shots">
+    <img src="store/out/screenshot-2-angles.png" alt="Distinct angles" />
+    <img src="store/out/screenshot-3-inline.png" alt="Works inside ChatGPT" />
+  </div>
+</div></section>
+
+<section id="install" style="background:var(--elev);border-top:1px solid var(--soft);border-bottom:1px solid var(--soft);"><div class="wrap">
+  <h2>Install in a minute</h2>
+  <p class="sec-sub">Until it's on the Web Store, load it unpacked:</p>
+  <div class="steps">
+    <div class="step"><div>Download or clone the <a class="grad-t" href="https://github.com/RemielDev/multi-prompt-for-chatgpt">GitHub repo</a>.</div></div>
+    <div class="step"><div>Open <code>chrome://extensions</code> and turn on <b>Developer mode</b>.</div></div>
+    <div class="step"><div>Click <b>Load unpacked</b> and select the project folder.</div></div>
+    <div class="step"><div>Open <a class="grad-t" href="https://chatgpt.com">chatgpt.com</a>, type a prompt, and click the grid button next to Send.</div></div>
+  </div>
+</div></section>
+
+<footer><div class="wrap">
+  <div>© 2026 RemielDev · MIT Licensed</div>
+  <div style="display:flex;gap:18px;">
+    <a href="https://github.com/RemielDev/multi-prompt-for-chatgpt">GitHub</a>
+    <a href="privacy.html">Privacy</a>
+    <a href="https://github.com/RemielDev/multi-prompt-for-chatgpt/issues">Support</a>
+  </div>
+</div>
+<div class="wrap disclaim">Not affiliated with, endorsed by, or sponsored by OpenAI. "ChatGPT" is a trademark of OpenAI, used only to describe compatibility.</div>
+</footer>
+
+</body>
+</html>

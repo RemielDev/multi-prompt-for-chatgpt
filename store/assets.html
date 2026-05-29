@@ -1,0 +1,313 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Multi-Prompt for ChatGPT — store assets</title>
+<style>
+  :root{
+    --bg:#0a0f0e; --panel:#141a18; --elev:#101614; --border:#243029; --soft:#1a221f;
+    --text:#f2f5f4; --muted:#9bb0a8; --dim:#6b817a;
+    --a:#10a37f; --b:#2dd4bf;
+    --grad:linear-gradient(135deg,var(--a),var(--b));
+  }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{background:#000;font-family:"Inter",-apple-system,Segoe UI,Roboto,Arial,sans-serif;-webkit-font-smoothing:antialiased;}
+  .frame{position:relative;overflow:hidden;}
+
+  /* ---- Backdrops ---- */
+  .bg-grad{position:absolute;inset:0;
+    background:
+      radial-gradient(900px 520px at 16% 10%, rgba(16,163,127,0.30), transparent 60%),
+      radial-gradient(820px 600px at 90% 92%, rgba(45,212,191,0.22), transparent 60%),
+      linear-gradient(160deg,#0c1311,#0a0f0e 60%,#070b0a);}
+  .grid-overlay{position:absolute;inset:0;opacity:.05;
+    background-image:linear-gradient(#fff 1px,transparent 1px),linear-gradient(90deg,#fff 1px,transparent 1px);
+    background-size:48px 48px;}
+
+  /* ---- Settings popup mock ---- */
+  .pp{width:312px;border-radius:16px;overflow:hidden;background:var(--bg);
+    border:1px solid var(--border);box-shadow:0 40px 90px rgba(0,0,0,.6);}
+  .pp .hd{display:flex;align-items:center;gap:10px;padding:13px 14px;border-bottom:1px solid var(--soft);background:var(--elev);}
+  .pp .lg{width:26px;height:26px;border-radius:8px;}
+  .pp .nm{font-weight:800;font-size:13.5px;letter-spacing:-.01em;}
+  .pp .sub{font-size:10.5px;color:var(--muted);margin-top:1px;}
+  .pp .body{padding:13px 14px;display:flex;flex-direction:column;gap:12px;}
+  .pp .rowf{display:flex;align-items:center;justify-content:space-between;}
+  .pp .lab{font-size:12px;font-weight:700;color:var(--text);}
+  .pp .num{width:54px;text-align:center;background:var(--panel);border:1px solid var(--border);border-radius:8px;padding:6px 0;font-weight:700;color:var(--text);font-size:13px;}
+  .pp .grp{border:1px solid var(--border);border-radius:11px;overflow:hidden;}
+  .pp .opt{display:flex;align-items:flex-start;gap:9px;padding:9px 11px;}
+  .pp .opt+.opt{border-top:1px solid var(--soft);}
+  .pp .rb{width:15px;height:15px;border-radius:50%;border:2px solid var(--dim);margin-top:1px;flex:none;}
+  .pp .opt.on .rb{border-color:var(--a);box-shadow:inset 0 0 0 3px var(--a);}
+  .pp .ot{font-size:12.5px;font-weight:700;color:var(--text);}
+  .pp .od{font-size:10.5px;color:var(--muted);margin-top:1px;}
+  .pp .ang{background:var(--panel);border:1px solid var(--border);border-radius:9px;padding:9px 11px;font-size:11.5px;color:var(--muted);line-height:1.6;}
+  .pp .ang b{color:var(--text);font-weight:700;}
+  .pp .ck{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--text);}
+  .pp .box{width:15px;height:15px;border-radius:4px;background:var(--grad);display:grid;place-items:center;}
+  .pp .box:after{content:"";width:8px;height:5px;border-left:2px solid #fff;border-bottom:2px solid #fff;transform:rotate(-45deg) translate(0,-1px);}
+  .pp .cta{margin-top:2px;padding:9px;border-radius:9px;border:1px solid var(--border);background:var(--panel);text-align:center;font-weight:700;font-size:12.5px;color:var(--text);}
+
+  /* ---- ChatGPT composer mock ---- */
+  .cg{width:560px;background:var(--elev);border:1px solid var(--border);border-radius:26px;padding:14px 16px;display:flex;align-items:center;gap:12px;box-shadow:0 24px 60px rgba(0,0,0,.45);}
+  .cg .plus{width:30px;height:30px;border-radius:50%;border:1px solid var(--border);color:var(--muted);display:grid;place-items:center;font-size:20px;flex:none;}
+  .cg .ph{flex:1;color:var(--dim);font-size:15px;}
+  .cg .mic{width:30px;height:30px;border-radius:50%;border:1px solid var(--border);flex:none;}
+  .cg .grid{width:38px;height:38px;border-radius:50%;flex:none;display:grid;place-items:center;position:relative;
+    background:rgba(16,163,127,.16);border:1px solid var(--a);}
+  .cg .grid svg{width:20px;height:20px;}
+  .cg .grid .bdg{position:absolute;top:-4px;right:-4px;min-width:17px;height:17px;border-radius:999px;background:var(--a);color:#fff;font-size:10px;font-weight:800;display:grid;place-items:center;padding:0 4px;}
+  .cg .send{width:38px;height:38px;border-radius:50%;flex:none;background:var(--grad);display:grid;place-items:center;}
+  .cg .send:after{content:"";border-style:solid;border-width:0 6px 9px 6px;border-color:transparent transparent #062019 transparent;}
+
+  /* ---- Answer tiles (fan-out) ---- */
+  .tile{width:236px;border-radius:14px;background:var(--panel);border:1px solid var(--border);box-shadow:0 20px 50px rgba(0,0,0,.45);overflow:hidden;}
+  .tile .th{display:flex;align-items:center;justify-content:space-between;padding:9px 11px;border-bottom:1px solid var(--soft);}
+  .tile .who{display:flex;align-items:center;gap:7px;font-size:11px;font-weight:700;color:var(--muted);}
+  .tile .who .av{width:15px;height:15px;border-radius:50%;background:var(--grad);}
+  .tile .chip{font-size:9.5px;font-weight:800;color:#062019;background:linear-gradient(135deg,var(--a),var(--b));padding:3px 8px;border-radius:999px;}
+  .tile .bd{padding:11px 12px;display:flex;flex-direction:column;gap:6px;}
+  .tile .ln{height:7px;border-radius:4px;background:rgba(255,255,255,.10);}
+
+  /* ---- Past message + toolbar mock ---- */
+  .msg{display:flex;flex-direction:column;align-items:flex-end;gap:7px;}
+  .msg .bub{max-width:360px;background:var(--panel);border:1px solid var(--border);border-radius:16px;padding:11px 15px;color:var(--text);font-size:14px;}
+  .msg .bar{display:flex;gap:6px;}
+  .msg .ic{width:28px;height:28px;border-radius:8px;border:1px solid var(--border);background:var(--elev);display:grid;place-items:center;color:var(--muted);font-size:13px;}
+  .msg .ic.hl{background:rgba(16,163,127,.16);border-color:var(--a);color:var(--a);position:relative;}
+  .msg .ic.hl svg{width:15px;height:15px;}
+  .msg .ic.hl .bdg{position:absolute;top:-5px;right:-5px;min-width:15px;height:15px;border-radius:999px;background:var(--a);color:#fff;font-size:9px;font-weight:800;display:grid;place-items:center;}
+
+  /* ---- Typography ---- */
+  .kicker{display:inline-flex;align-items:center;gap:8px;font-size:13px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;
+    color:#9ff0d6;background:rgba(16,163,127,.12);border:1px solid rgba(16,163,127,.3);padding:7px 13px;border-radius:999px;width:fit-content;}
+  .h1{color:#fff;font-weight:800;letter-spacing:-.02em;line-height:1.05;}
+  .grad-t{background:var(--grad);-webkit-background-clip:text;background-clip:text;color:transparent;}
+  .lead{color:var(--muted);line-height:1.5;}
+  .feat{display:flex;flex-direction:column;gap:10px;}
+  .pill{display:flex;align-items:center;gap:9px;color:#e8efec;font-weight:600;font-size:15px;background:rgba(255,255,255,.04);border:1px solid var(--border);padding:9px 14px;border-radius:12px;width:fit-content;}
+  .pill .k{width:9px;height:9px;border-radius:50%;background:var(--grad);flex:none;}
+  .chips{display:flex;gap:9px;flex-wrap:wrap;}
+  .ac{font-weight:800;color:#062019;font-size:13px;background:linear-gradient(135deg,var(--a),var(--b));padding:7px 13px;border-radius:999px;}
+  .logo-lg{width:64px;height:64px;border-radius:18px;}
+
+  /* ===== SCREENSHOTS 1280x800 ===== */
+  .shot{width:1280px;height:800px;}
+  .shot .pad{position:relative;height:100%;padding:72px 80px;display:flex;}
+
+  /* Shot 1: hero */
+  #shot1 .left{flex:1;display:flex;flex-direction:column;justify-content:center;gap:24px;max-width:540px;}
+  #shot1 .h1{font-size:58px;}
+  #shot1 .lead{font-size:20px;max-width:470px;}
+  #shot1 .right{flex:1;position:relative;}
+  #shot1 .cg{position:absolute;top:96px;right:30px;transform:rotate(-3deg);width:520px;}
+  #shot1 .t1{position:absolute;top:236px;right:250px;transform:rotate(-5deg);}
+  #shot1 .t2{position:absolute;top:300px;right:30px;transform:rotate(3deg);}
+  #shot1 .pp{position:absolute;bottom:34px;right:120px;transform:rotate(1deg);}
+
+  /* Shot 2: angles */
+  #shot2 .pad{align-items:center;gap:56px;}
+  #shot2 .copy{flex:1;display:flex;flex-direction:column;gap:22px;}
+  #shot2 .h1{font-size:50px;}
+  #shot2 .lead{font-size:19px;max-width:430px;}
+  #shot2 .stage{flex:none;position:relative;width:520px;height:600px;}
+  #shot2 .pp{position:absolute;top:40px;left:0;}
+  #shot2 .t1{position:absolute;top:70px;right:0;transform:rotate(3deg);}
+  #shot2 .t2{position:absolute;top:300px;right:30px;transform:rotate(-3deg);}
+  #shot2 .t3{position:absolute;top:430px;left:40px;transform:rotate(2deg);}
+
+  /* Shot 3: inline in ChatGPT */
+  #shot3 .pad{flex-direction:column;align-items:center;justify-content:center;text-align:center;gap:30px;}
+  #shot3 .h1{font-size:52px;max-width:840px;}
+  #shot3 .lead{font-size:19px;max-width:640px;}
+  #shot3 .cg{width:640px;}
+  #shot3 .msg{margin-top:6px;}
+
+  /* Shot 4: settings */
+  #shot4 .pad{align-items:center;gap:64px;}
+  #shot4 .copy{flex:1;display:flex;flex-direction:column;gap:22px;}
+  #shot4 .h1{font-size:50px;}
+  #shot4 .stage{flex:none;display:flex;justify-content:center;}
+  #shot4 .pp{transform:scale(1.18);}
+
+  /* ===== PROMO TILES ===== */
+  #tileSmall{width:440px;height:280px;}
+  #tileSmall .pad{position:relative;height:100%;display:flex;flex-direction:column;justify-content:center;padding:32px 34px;gap:14px;}
+  #tileSmall .h1{font-size:28px;}
+  #tileSmall .lead{font-size:13.5px;max-width:230px;}
+  #tileSmall .pp{position:absolute;right:-130px;top:34px;transform:scale(.9) rotate(3deg);}
+
+  #tileMarquee{width:1400px;height:560px;}
+  #tileMarquee .pad{position:relative;height:100%;display:flex;align-items:center;padding:0 90px;gap:50px;}
+  #tileMarquee .left{flex:1;display:flex;flex-direction:column;gap:24px;max-width:660px;}
+  #tileMarquee .h1{font-size:60px;}
+  #tileMarquee .lead{font-size:22px;max-width:560px;}
+  #tileMarquee .right{flex:none;position:relative;width:520px;height:460px;}
+  #tileMarquee .cg{position:absolute;top:30px;right:0;transform:rotate(-3deg);width:480px;}
+  #tileMarquee .t1{position:absolute;top:180px;right:230px;transform:rotate(-4deg);}
+  #tileMarquee .pp{position:absolute;bottom:0;right:80px;transform:rotate(2deg);}
+</style>
+</head>
+<body>
+
+<svg width="0" height="0" style="position:absolute"><defs>
+  <linearGradient id="lg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#10a37f"/><stop offset="1" stop-color="#2dd4bf"/></linearGradient>
+  <symbol id="mark" viewBox="0 0 32 32">
+    <rect x="1" y="1" width="30" height="30" rx="8" fill="url(#lg)"/>
+    <rect x="7" y="7" width="8" height="8" rx="2" fill="#fff"/>
+    <rect x="17" y="7" width="8" height="8" rx="2" fill="#fff"/>
+    <rect x="7" y="17" width="8" height="8" rx="2" fill="#fff"/>
+    <rect x="17" y="17" width="8" height="8" rx="2" fill="#fff"/>
+  </symbol>
+</defs></svg>
+
+<!-- ===== SHOT 1: HERO ===== -->
+<div class="frame shot" id="shot1">
+  <div class="bg-grad"></div><div class="grid-overlay"></div>
+  <div class="pad">
+    <div class="left">
+      <span class="kicker"><svg width="16" height="16"><use href="#mark"/></svg>Multi-Prompt</span>
+      <div class="h1">One prompt.<br><span class="grad-t">Every angle.</span></div>
+      <div class="lead">Send the same prompt to several new ChatGPT chats at once and compare the answers side by side — without copy-pasting a thing.</div>
+      <div class="chips"><span class="ac">Concise</span><span class="ac">Detailed</span><span class="ac">Critical</span><span class="ac">Creative</span></div>
+    </div>
+    <div class="right">
+      <div class="cg" data-composer></div>
+      <div class="t1" data-tile="Concise"></div>
+      <div class="t2" data-tile="Detailed"></div>
+      <div class="pp" data-popup="hint"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== SHOT 2: ANGLES ===== -->
+<div class="frame shot" id="shot2">
+  <div class="bg-grad"></div><div class="grid-overlay"></div>
+  <div class="pad">
+    <div class="copy">
+      <span class="kicker"><svg width="16" height="16"><use href="#mark"/></svg>Distinct angles</span>
+      <div class="h1">Give each chat<br>its own angle.</div>
+      <div class="lead">Concise, detailed, critical, creative, step-by-step — or your own editable list. Each chat takes the next angle, so every answer is genuinely different.</div>
+    </div>
+    <div class="stage">
+      <div class="pp" data-popup="angles"></div>
+      <div class="t1" data-tile="Concise"></div>
+      <div class="t2" data-tile="Critical"></div>
+      <div class="t3" data-tile="Creative"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== SHOT 3: INLINE ===== -->
+<div class="frame shot" id="shot3">
+  <div class="bg-grad"></div><div class="grid-overlay"></div>
+  <div class="pad">
+    <span class="kicker">Right where you type</span>
+    <div class="h1">Works <span class="grad-t">inside ChatGPT.</span></div>
+    <div class="lead">A grid button sits next to Send, and on every past message's toolbar. One click fans the prompt out — images and all.</div>
+    <div class="cg" data-composer></div>
+    <div class="msg">
+      <div class="bub">Draft a tagline for a productivity app.</div>
+      <div class="bar">
+        <div class="ic">⧉</div>
+        <div class="ic hl"><svg viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="8" height="8" rx="2"/><rect x="13" y="3" width="8" height="8" rx="2"/><rect x="3" y="13" width="8" height="8" rx="2"/><rect x="13" y="13" width="8" height="8" rx="2"/></g></svg><span class="bdg">3</span></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== SHOT 4: SETTINGS ===== -->
+<div class="frame shot" id="shot4">
+  <div class="bg-grad"></div><div class="grid-overlay"></div>
+  <div class="pad">
+    <div class="copy">
+      <span class="kicker">Set it once</span>
+      <div class="h1">Simple<br>by design.</div>
+      <div class="feat">
+        <div class="pill"><span class="k"></span>1–10 variations per click</div>
+        <div class="pill"><span class="k"></span>Three variation styles</div>
+        <div class="pill"><span class="k"></span>Auto-group the new tabs</div>
+        <div class="pill"><span class="k"></span>Close all tabs in one click</div>
+        <div class="pill"><span class="k"></span>No tracking, no servers</div>
+      </div>
+    </div>
+    <div class="stage"><div class="pp" data-popup="angles"></div></div>
+  </div>
+</div>
+
+<!-- ===== SMALL PROMO 440x280 ===== -->
+<div class="frame" id="tileSmall">
+  <div class="bg-grad"></div>
+  <div class="pad">
+    <svg class="logo-lg" viewBox="0 0 32 32"><use href="#mark"/></svg>
+    <div class="h1">Multi-Prompt</div>
+    <div class="lead">One prompt, many ChatGPT chats — compared side by side.</div>
+    <div class="pp" data-popup="hint"></div>
+  </div>
+</div>
+
+<!-- ===== MARQUEE 1400x560 ===== -->
+<div class="frame" id="tileMarquee">
+  <div class="bg-grad"></div><div class="grid-overlay"></div>
+  <div class="pad">
+    <div class="left">
+      <span class="kicker"><svg width="16" height="16"><use href="#mark"/></svg>Multi-Prompt for ChatGPT</span>
+      <div class="h1">One prompt.<br><span class="grad-t">Every angle.</span></div>
+      <div class="lead">Fan a prompt out to several new ChatGPT chats at once and compare the answers. One click, right inside ChatGPT.</div>
+    </div>
+    <div class="right">
+      <div class="cg" data-composer></div>
+      <div class="t1" data-tile="Detailed"></div>
+      <div class="pp" data-popup="hint"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+  const MARK = '<svg viewBox="0 0 32 32"><use href="#mark"/></svg>';
+  const GRID = '<svg viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="8" height="8" rx="2"/><rect x="13" y="3" width="8" height="8" rx="2"/><rect x="3" y="13" width="8" height="8" rx="2"/><rect x="13" y="13" width="8" height="8" rx="2"/></g></svg>';
+
+  const POPUP = (mode) => {
+    const on = (m) => (mode === m ? " on" : "");
+    const anglesBlock = mode === "angles"
+      ? `<div class="ang"><b>concise</b> — get to the point<br><b>detailed</b> — cover the nuances<br><b>critical</b> — challenge the premise<br><b>creative</b> — an unexpected take</div>`
+      : "";
+    return `
+      <div class="hd">
+        <svg class="lg" viewBox="0 0 32 32"><use href="#mark"/></svg>
+        <div><div class="nm">Multi-Prompt for ChatGPT</div><div class="sub">Settings for the in-page buttons</div></div>
+      </div>
+      <div class="body">
+        <div class="rowf"><span class="lab">Variations per click</span><span class="num">3</span></div>
+        <div class="grp">
+          <div class="opt${on('none')}"><span class="rb"></span><span><span class="ot">Identical</span><span class="od">Same prompt to every chat</span></span></div>
+          <div class="opt${on('hint')}"><span class="rb"></span><span><span class="ot">Nudge for variety</span><span class="od">Append a "different approach" line</span></span></div>
+          <div class="opt${on('angles')}"><span class="rb"></span><span><span class="ot">Distinct angles</span><span class="od">Each chat gets its own angle</span></span></div>
+        </div>
+        ${anglesBlock}
+        <div class="ck"><span class="box"></span>Group the new tabs together</div>
+        <div class="cta">Close all variation tabs</div>
+      </div>`;
+  };
+
+  const COMPOSER = () => `
+    <div class="plus">+</div>
+    <div class="ph">Ask anything</div>
+    <div class="mic"></div>
+    <div class="grid">${GRID}<span class="bdg">3</span></div>
+    <div class="send"></div>`;
+
+  const TILE = (angle) => `
+    <div class="th"><span class="who"><span class="av"></span>ChatGPT</span><span class="chip">${angle}</span></div>
+    <div class="bd">
+      <div class="ln" style="width:96%"></div><div class="ln" style="width:88%"></div>
+      <div class="ln" style="width:92%"></div><div class="ln" style="width:70%"></div>
+    </div>`;
+
+  document.querySelectorAll("[data-popup]").forEach((el) => { el.classList.add("pp"); el.innerHTML = POPUP(el.getAttribute("data-popup")); });
+  document.querySelectorAll("[data-composer]").forEach((el) => { el.classList.add("cg"); el.innerHTML = COMPOSER(); });
+  document.querySelectorAll("[data-tile]").forEach((el) => { el.classList.add("tile"); el.innerHTML = TILE(el.getAttribute("data-tile")); });
+</script>
+</body>
+</html>
