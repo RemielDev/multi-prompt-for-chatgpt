@@ -1,0 +1,117 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Multi-Prompt for ChatGPT — Settings</title>
+    <link rel="stylesheet" href="popup.css" />
+  </head>
+  <body>
+    <main class="card">
+      <header class="header">
+        <div class="logo" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+        <div>
+          <h1>Multi-Prompt for ChatGPT</h1>
+          <p class="subtitle">Settings for the in-page buttons.</p>
+        </div>
+      </header>
+
+      <!-- Variation count -->
+      <div class="field row">
+        <label class="label" for="count">Variations per click</label>
+        <input
+          id="count"
+          type="number"
+          min="1"
+          max="10"
+          step="1"
+          value="3"
+          inputmode="numeric"
+          aria-describedby="count-hint"
+        />
+      </div>
+      <p id="count-hint" class="hint">Opens 1–10 new chats each time.</p>
+
+      <!-- Variation style -->
+      <fieldset class="field group">
+        <legend class="label">Variation style</legend>
+
+        <label class="radio">
+          <input type="radio" name="angleMode" value="none" />
+          <span>
+            <strong>Identical</strong>
+            <small>Send the exact same prompt to every chat.</small>
+          </span>
+        </label>
+
+        <label class="radio">
+          <input type="radio" name="angleMode" value="hint" />
+          <span>
+            <strong>Nudge for variety</strong>
+            <small>Append a "give a different approach" line to each.</small>
+          </span>
+        </label>
+
+        <label class="radio">
+          <input type="radio" name="angleMode" value="angles" />
+          <span>
+            <strong>Distinct angles</strong>
+            <small>Give each chat its own angle (cycles if needed).</small>
+          </span>
+        </label>
+      </fieldset>
+
+      <!-- Editable angles (shown only for "Distinct angles") -->
+      <div class="field" id="angles-field" hidden>
+        <label class="label" for="angles">Angles — one per line</label>
+        <textarea
+          id="angles"
+          rows="5"
+          spellcheck="false"
+          aria-describedby="angles-hint"
+        ></textarea>
+        <p id="angles-hint" class="hint">
+          Chat 1 uses line 1, chat 2 uses line 2, and so on.
+        </p>
+      </div>
+
+      <!-- Toggles -->
+      <label class="field checkbox">
+        <input id="groupTabs" type="checkbox" />
+        <span class="label">Group the new tabs together</span>
+      </label>
+
+      <label class="field checkbox">
+        <input id="focusFirst" type="checkbox" />
+        <span class="label">Jump to the first new tab after opening</span>
+      </label>
+
+      <!-- Tab management -->
+      <div class="actions">
+        <button id="closeAll" type="button" class="secondary">
+          Close all variation tabs
+        </button>
+      </div>
+
+      <p id="status" class="status" role="status" aria-live="polite"></p>
+
+      <!-- Help -->
+      <section class="info">
+        <p class="info-title">Where the buttons are</p>
+        <ul>
+          <li>A grid icon next to ChatGPT's Send button.</li>
+          <li>A grid icon in each past message's hover toolbar.</li>
+        </ul>
+        <p class="info-title">Shortcuts</p>
+        <ul>
+          <li><kbd>Ctrl/Cmd</kbd>+<kbd>Shift</kbd>+<kbd>1</kbd> — open this panel</li>
+          <li><kbd>Ctrl/Cmd</kbd>+<kbd>Shift</kbd>+<kbd>0</kbd> — close variation tabs</li>
+        </ul>
+      </section>
+    </main>
+
+    <script src="popup.js"></script>
+  </body>
+</html>

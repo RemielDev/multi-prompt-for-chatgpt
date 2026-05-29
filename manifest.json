@@ -1,0 +1,52 @@
+{
+  "manifest_version": 3,
+  "name": "Multi-Prompt for ChatGPT",
+  "version": "2.0.0",
+  "description": "Send one prompt to several new ChatGPT chats at once — each with its own angle — and compare the answers side by side.",
+  "icons": {
+    "16": "icons/icon16.png",
+    "32": "icons/icon32.png",
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
+  },
+  "action": {
+    "default_title": "ChatGPT Multi-Prompt settings",
+    "default_popup": "popup.html",
+    "default_icon": {
+      "16": "icons/icon16.png",
+      "32": "icons/icon32.png",
+      "48": "icons/icon48.png",
+      "128": "icons/icon128.png"
+    }
+  },
+  "background": {
+    "service_worker": "background.js"
+  },
+  "permissions": ["storage", "tabGroups"],
+  "host_permissions": ["https://chatgpt.com/*", "https://chat.openai.com/*"],
+  "content_scripts": [
+    {
+      "matches": ["https://chatgpt.com/*", "https://chat.openai.com/*"],
+      "js": ["content.js"],
+      "css": ["content.css"],
+      "run_at": "document_idle"
+    }
+  ],
+  "commands": {
+    "_execute_action": {
+      "suggested_key": {
+        "default": "Ctrl+Shift+1",
+        "mac": "Command+Shift+1"
+      },
+      "description": "Open ChatGPT Multi-Prompt settings"
+    },
+    "close-variations": {
+      "suggested_key": {
+        "default": "Ctrl+Shift+0",
+        "mac": "Command+Shift+0"
+      },
+      "description": "Close all open ChatGPT Variations tabs"
+    }
+  },
+  "minimum_chrome_version": "116"
+}

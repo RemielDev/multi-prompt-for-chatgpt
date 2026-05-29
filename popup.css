@@ -1,0 +1,272 @@
+/* ChatGPT Multi-Prompt — popup (settings) styles.
+ * Light + dark aware, WCAG AA contrast, visible focus rings. */
+
+:root {
+  --accent: #10a37f;
+  --accent-strong: #0e8e6d;
+  --ok-text: #0d8668; /* AA on white (4.54:1) for success text */
+  --bg: #ffffff;
+  --fg: #1a1a1a;
+  --muted: #6b6b6b;
+  --line: #e6e6e6;
+  --surface: #f7f7f8;
+  --danger: #b03a2e;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --ok-text: #10a37f; /* AA on dark surface (5.14:1) */
+    --bg: #1e1f24;
+    --fg: #ececf1;
+    --muted: #a6a6b3;
+    --line: #34353c;
+    --surface: #26272d;
+  }
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  font-family:
+    -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial,
+    sans-serif;
+  font-size: 14px;
+  color: var(--fg);
+  background: var(--bg);
+}
+
+body {
+  width: 340px;
+}
+
+.card {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 16px;
+}
+
+/* Header */
+.header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.header h1 {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+.header .subtitle {
+  margin: 2px 0 0;
+  font-size: 12px;
+  color: var(--muted);
+}
+
+/* Mini logo: 2x2 grid echoing the extension icon */
+.logo {
+  flex: 0 0 auto;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 2px;
+  width: 30px;
+  height: 30px;
+  padding: 5px;
+  border-radius: 8px;
+  background: var(--accent);
+}
+.logo span {
+  display: block;
+  border-radius: 2px;
+  background: #fff;
+}
+
+/* Fields */
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.field.row {
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+.field.checkbox {
+  flex-direction: row;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+}
+.label {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--fg);
+}
+.field.checkbox .label {
+  font-weight: 400;
+}
+.hint {
+  margin: 0;
+  font-size: 11px;
+  color: var(--muted);
+  line-height: 1.4;
+}
+
+/* Inputs */
+input[type="number"],
+textarea {
+  font: inherit;
+  color: var(--fg);
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 7px 9px;
+  outline: none;
+  transition: border-color 120ms ease, box-shadow 120ms ease;
+}
+input[type="number"] {
+  width: 72px;
+  text-align: center;
+}
+textarea {
+  resize: vertical;
+  min-height: 84px;
+  line-height: 1.45;
+}
+input[type="number"]:focus-visible,
+textarea:focus-visible {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(16, 163, 127, 0.2);
+}
+input[type="checkbox"],
+input[type="radio"] {
+  accent-color: var(--accent);
+  width: 15px;
+  height: 15px;
+  flex-shrink: 0;
+  cursor: pointer;
+}
+input:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+/* Radio group */
+fieldset.group {
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 10px 12px;
+  margin: 0;
+}
+fieldset.group legend {
+  padding: 0 4px;
+}
+.radio {
+  display: flex;
+  align-items: flex-start;
+  gap: 9px;
+  padding: 6px 0;
+  cursor: pointer;
+}
+.radio + .radio {
+  border-top: 1px solid var(--line);
+}
+.radio span {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+.radio strong {
+  font-size: 13px;
+  font-weight: 600;
+}
+.radio small {
+  font-size: 11px;
+  color: var(--muted);
+  line-height: 1.35;
+}
+
+/* Buttons */
+.actions {
+  display: flex;
+}
+.secondary {
+  font: inherit;
+  font-weight: 600;
+  width: 100%;
+  color: var(--fg);
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 9px 12px;
+  cursor: pointer;
+  transition: background 120ms ease, border-color 120ms ease;
+}
+.secondary:hover {
+  border-color: var(--accent);
+}
+.secondary:active {
+  transform: scale(0.99);
+}
+.secondary:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+/* Status line */
+.status {
+  margin: 0;
+  min-height: 16px;
+  font-size: 12px;
+  color: var(--muted);
+}
+.status.error {
+  color: var(--danger);
+}
+.status.success {
+  color: var(--ok-text);
+}
+
+/* Info block */
+.info {
+  border-top: 1px solid var(--line);
+  padding-top: 12px;
+}
+.info-title {
+  margin: 0 0 4px;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.info ul {
+  margin: 0 0 10px;
+  padding-left: 18px;
+  font-size: 12px;
+  color: var(--fg);
+  line-height: 1.55;
+}
+.info ul:last-child {
+  margin-bottom: 0;
+}
+kbd {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 10px;
+  padding: 1px 5px;
+  border: 1px solid var(--line);
+  border-bottom-width: 2px;
+  border-radius: 4px;
+  background: var(--surface);
+}
+
+[hidden] {
+  display: none !important;
+}

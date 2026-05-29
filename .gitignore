@@ -1,0 +1,18 @@
+# OS junk
+.DS_Store
+Thumbs.db
+
+# Editor
+.vscode/
+.idea/
+
+# Node (not used, but just in case)
+node_modules/
+
+# Packaged builds
+*.zip
+*.crx
+*.pem
+
+# Local-only working docs (not for the public repo)
+_local/

@@ -1,0 +1,219 @@
+/* ChatGPT Multi-Prompt - in-page button + toast styling.
+ *
+ * Everything is scoped with the cmp-multi- prefix so it never collides with
+ * ChatGPT's own classes. Colours lean on ChatGPT's CSS variables where they
+ * exist, with sensible fallbacks, so the buttons feel native in both light
+ * and dark themes. */
+
+/* ---------- shared button ---------- */
+
+.cmp-multi-btn {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  min-width: 36px;
+  padding: 0;
+  margin: 0;
+  border: 1px solid transparent;
+  border-radius: 999px;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+  -webkit-appearance: none;
+  appearance: none;
+  transition:
+    background-color 120ms ease,
+    border-color 120ms ease,
+    transform 80ms ease,
+    opacity 120ms ease;
+}
+
+.cmp-multi-btn:hover {
+  background: rgba(0, 0, 0, 0.06);
+  border-color: rgba(0, 0, 0, 0.12);
+}
+
+.cmp-multi-btn:active {
+  transform: scale(0.96);
+}
+
+/* Visible focus ring for keyboard users (WCAG 2.4.7). */
+.cmp-multi-btn:focus-visible {
+  outline: 2px solid #10a37f;
+  outline-offset: 2px;
+}
+
+.cmp-multi-btn svg {
+  width: 18px;
+  height: 18px;
+  display: block;
+}
+
+/* Count badge */
+.cmp-multi-count {
+  position: absolute;
+  top: -2px;
+  right: -2px;
+  min-width: 16px;
+  height: 16px;
+  padding: 0 4px;
+  border-radius: 999px;
+  background: #0d8668; /* AA: white text 4.54:1 */
+  color: #fff;
+  font-size: 10px;
+  font-weight: 700;
+  line-height: 16px;
+  text-align: center;
+  pointer-events: none;
+  box-shadow: 0 0 0 2px var(--main-surface-primary, #fff);
+}
+
+/* Busy state: dim + spinner overlay while a fan-out is in flight. */
+.cmp-multi-btn.is-busy {
+  opacity: 0.6;
+  pointer-events: none;
+}
+.cmp-multi-btn.is-busy::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  margin: auto;
+  width: 14px;
+  height: 14px;
+  border: 2px solid currentColor;
+  border-top-color: transparent;
+  border-radius: 50%;
+  animation: cmp-multi-spin 0.6s linear infinite;
+}
+.cmp-multi-btn.is-busy svg,
+.cmp-multi-btn.is-busy .cmp-multi-count {
+  visibility: hidden;
+}
+
+@keyframes cmp-multi-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Dark theme tweaks */
+@media (prefers-color-scheme: dark) {
+  .cmp-multi-btn:hover {
+    background: rgba(255, 255, 255, 0.08);
+    border-color: rgba(255, 255, 255, 0.16);
+  }
+}
+html.dark .cmp-multi-btn:hover,
+html[data-theme="dark"] .cmp-multi-btn:hover {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.16);
+}
+
+/* ---------- toolbar-docked per-message button ---------- */
+
+/* Sits inline with ChatGPT's Copy / Edit buttons, so match their size. */
+.cmp-multi-btn--toolbar {
+  width: 30px;
+  height: 30px;
+  min-width: 30px;
+}
+.cmp-multi-btn--toolbar svg {
+  width: 16px;
+  height: 16px;
+}
+.cmp-multi-btn--toolbar .cmp-multi-count {
+  top: -3px;
+  right: -3px;
+  min-width: 14px;
+  height: 14px;
+  font-size: 9px;
+  line-height: 14px;
+}
+
+/* ---------- floating fallback per-message button ---------- */
+
+.cmp-multi-msg-host {
+  position: relative;
+}
+.cmp-multi-btn--floating {
+  position: absolute;
+  top: -10px;
+  right: -10px;
+  width: 28px;
+  height: 28px;
+  min-width: 28px;
+  background: var(--main-surface-primary, #fff);
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+  opacity: 0;
+  transform: translateY(2px);
+  z-index: 5;
+}
+.cmp-multi-btn--floating svg {
+  width: 14px;
+  height: 14px;
+}
+.cmp-multi-msg-host:hover .cmp-multi-btn--floating,
+.cmp-multi-msg-host:focus-within .cmp-multi-btn--floating,
+.cmp-multi-btn--floating:focus-visible,
+.cmp-multi-btn--floating:hover {
+  opacity: 1;
+  transform: translateY(0);
+}
+@media (prefers-color-scheme: dark) {
+  .cmp-multi-btn--floating {
+    background: var(--main-surface-secondary, #2a2b32);
+    border-color: rgba(255, 255, 255, 0.16);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+  }
+}
+
+/* ---------- toast ---------- */
+
+#cmp-multi-toast {
+  position: fixed;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%) translateY(8px);
+  z-index: 2147483600;
+  max-width: 90vw;
+  padding: 10px 16px;
+  border-radius: 10px;
+  background: #1a1a1a;
+  color: #fff;
+  font-size: 13px;
+  font-weight: 500;
+  font-family:
+    -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial,
+    sans-serif;
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.25);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 200ms ease, transform 200ms ease;
+}
+#cmp-multi-toast.visible {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+#cmp-multi-toast.error {
+  background: #b03a2e; /* >= 4.5:1 with white text */
+}
+#cmp-multi-toast.success {
+  background: #0e7a5f;
+}
+
+/* ---------- respect reduced motion ---------- */
+
+@media (prefers-reduced-motion: reduce) {
+  .cmp-multi-btn,
+  .cmp-multi-btn--floating,
+  #cmp-multi-toast {
+    transition: none;
+  }
+  .cmp-multi-btn.is-busy::after {
+    animation-duration: 1.2s;
+  }
+}
